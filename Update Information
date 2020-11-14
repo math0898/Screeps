@@ -1,0 +1,24 @@
+------ Update 1.1.1 ------ Capacity Based Spawning ------
+Goal: Change Spawning to work on max capacity rather than controller level.
+
+Completed Tasks: 
+---> spawn{#Role} functions have been updated and signature changed to match the style of spawning based on capacity as apposed to the era currently present.
+---> Two optimizations, spawnMiner(capacity, spawn) down from O(t) to O(c), spawn(currentRoom) down from O(s * n * t) to O(s + t).
+---> (-20) Lines of code... doesn't mean much but hey. 
+---> Made a small notational difference, counts of creeps of each role now stored at room.memory.count.{#Role} instead of room.memory.count{#Role}.
+---> Change should be functional and reflected in an overall performance boost. 
+---> Left 2 TODO:'s 
+     ---> TOOD: Check if more Workers can be spawned.
+     ---> TODO: Reimplement Distance Harvesters.
+---> Aproximated cpu usage after changes (16.743 CPU per tick over 20,000 ticks).
+
+Additional TODO's:
+---> (IMPORTANT) Investigate the large increase in CPU usage once Era 2 is hit.
+---> Optimize creeps searching for dropped resources. 
+---> Add basic scouting Mechanics
+---> Add automatic additional room taking
+
+Performence Change
+---> (Cpu Usage) Previously untested -> (18.98) avg. over the first 20,000 ticks
+---> (Controller lvl) Previously untested -> (2:[25,707] - 57%) in 20,000 ticks
+---> (Wasted Resources) Untested
