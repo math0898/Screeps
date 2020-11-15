@@ -42,9 +42,10 @@ module.exports = {
          if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) creep.moveTo(creep.room.controller);
        }
    } else {
-     var droppedEnergy = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (f) => f.resourceType == 'energy'}); //O(e)? negligible
+     //Room will have highest dropped energy saved here
+     var droppedEnergy = creep.room.memory.droppedEnergy;
      //Check if the droppedEnergy is defined, Move to dropppedEnergy if not in range
-     if(droppedEnergy != undefined) {if(creep.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) creep.moveTo(droppedEnergy);}
-   }
+     if(droppedEnergy != null) {if(creep.pickup(Game.getObjectById(droppedEnergy.id)) == ERR_NOT_IN_RANGE) creep.moveTo(droppedEnergy.pos.x,droppedEnergy.pos.y);}
+  }
  }
 };

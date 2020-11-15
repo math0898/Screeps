@@ -38,23 +38,23 @@ function era1(currentRoom){
     //Call the citadel construction project!
     runWithCitadel(currentRoom); //O(s)
   }
-  var temp = currentRoom.find(FIND_CONSTRUCTION_SITES); //O(t)
-  //Used to determine the priority of the construction site saved
-  var prio = 100;
-  //See if anything needs to be built
-  if(temp.length > 0) {
-    for(var i = 0; i < temp.length; i++) {
-      if(temp[i].structureType == STRUCTURE_TOWER) { currentRoom.memory.build = temp[i]; break;}
-      else if(temp[i].structureType == STRUCTURE_EXTENSION && prio > 1) { currentRoom.memory.build = temp[i]; prio = 1;}
-      else if(temp[i].structureType == STRUCTURE_ROAD && prio > 2) { currentRoom.memory.build = temp[i]; prio = 2;}
-    }
-  } else currentRoom.memory.build = 'null';
   //Count the number of sources so we know the number of miners to make
   if(currentRoom.memory.source == undefined) currentRoom.memory.source = currentRoom.find(FIND_SOURCES); //O(t)
   //Init distance mines
   if(currentRoom.memory.distanceMines == undefined) currentRoom.memory.distanceMines = [];
   //Reset our scout target
   currentRoom.memory.scoutTarget = null;
+  //Find dropped energy
+  var droppedEnergies = currentRoom.find(FIND_DROPPED_RESOURCES, {filter: (f) => f.resourceType == 'energy'});
+  //Set the largest to memory
+  if(droppedEnergies.length > 0){
+    //Temporary 'largest'
+    currentRoom.memory.droppedEnergy = droppedEnergies[0];
+    //Find the largest
+    for(var i = 1; i < droppedEnergies.length; i++) if(droppedEnergies[i].amount > currentRoom.memory.droppedEnergy.amount) currentRoom.memory.droppedEnergy = droppedEnergies[i]; //O(t)
+  }
+  //Initialize droppedEnergy if non are found
+  else currentRoom.memory.droppedEnergy = null;
 }
 /**
  * The logic for a 2nd levl controller room. Implements and initializes distance

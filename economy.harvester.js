@@ -30,10 +30,10 @@ module.exports = {
     }
     //We aint working so we need to fill up
     else if (creep.memory.working == false){
-      //Naturally droppedEnergy would be the easiest to pickup
-      var droppedEnergy = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, (f) => f.resourceType == 'energy'); //O(t)
-      //If its not undefined and we can't pick it up move to it
-      if(droppedEnergy != undefined && creep.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) creep.moveTo(droppedEnergy);
+      //Room will have highest dropped energy saved here
+      var droppedEnergy = creep.room.memory.droppedEnergy;
+      //Check if the droppedEnergy is defined, Move to dropppedEnergy if not in range
+      if(droppedEnergy != null) {if(creep.pickup(Game.getObjectById(droppedEnergy.id)) == ERR_NOT_IN_RANGE) creep.moveTo(droppedEnergy.pos.x,droppedEnergy.pos.y);}
       //If there's no dropped energy we're going to need to mine it
       else {
         //Find closest source

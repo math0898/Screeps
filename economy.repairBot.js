@@ -27,10 +27,10 @@ module.exports = {
       else if(creep.repair(firstChoiceBuilding) == ERR_NOT_IN_RANGE) creep.moveTo(firstChoiceBuilding);
     //We need to fill up on energy
     } else if (creep.memory.working == false){
-      //Find dropped  energy,
-      var droppedEnergy = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, (f) => f.resourceType == 'energy'); //O(t)
-      //Move to source if not in range
-      if(droppedEnergy != undefined && creep.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) creep.moveTo(droppedEnergy);
+      //Room will have highest dropped energy saved here
+      var droppedEnergy = creep.room.memory.droppedEnergy;
+      //Check if the droppedEnergy is defined, Move to dropppedEnergy if not in range
+      if(droppedEnergy != null) {if(creep.pickup(Game.getObjectById(droppedEnergy.id)) == ERR_NOT_IN_RANGE) creep.moveTo(droppedEnergy.pos.x,droppedEnergy.pos.y);}
     }
   }
 };

@@ -12,11 +12,21 @@ var roleScout = require('combat.scout');
 var logicSpawn = require('logic.spawn');
 var logicEra = require('logic.era');
 //A couple booleans to handle certain situations
-var seige = false;
 var hostiles;
-var oneTime = true;
-//Initialize controlledRooms
-for(let r in Game.rooms) controlledRooms.push(r);
+/**
+ * Looks at all the visible rooms and adds those of which are considered
+ * under our control to the array controlledRooms. It also confirms all rooms
+ * in controlledRooms are still controlled.
+ * Expected case: O(r * t) --> r is the number of rooms, t is the number of buildings
+ */
+function initializeControlledRooms(){
+  //Reset controlledRooms temporarily
+  controlledRooms = [];
+  //These are the rooms we can see
+  var visibleRooms = Game.rooms;
+  //In each room try to find a spawn, if we find one add it to controlled rooms
+  for(let r in visibleRooms) if(Game.rooms[r].find(FIND_MY_SPAWNS).length > 0) controlledRooms.push(r); //O(r * t)
+}
 /**
  * Counts the number of each creep assigned to the room. Note this accesses
  * all creeps in order to find scouts, claimers, and distanceHarvesters. Otherwise
@@ -104,6 +114,8 @@ function updateCreepMemory(){
  * @s --> number of spawns
  */
 module.exports.loop = function(){
+  //Check if controlled rooms need to be initialized or refreshed
+  if(controlledRooms == undefined || Game.time % 1 == 0) initializeControlledRooms();
   //Run creep AI
   //Ecnomic creeps are more important
   economyCreepAI(); //O(9t * n) - O(2t * n)
@@ -128,10 +140,13 @@ module.exports.loop = function(){
     if(Game.flags['Data'].memory.cpuUsage == undefined) Game.flags['Data'].memory.cpuUsage = [];
     Game.flags['Data'].memory.cpuUsage.push(Game.cpu.getUsed());
   }
-  if(Game.flags['Print'] != undefined && Game.time % 1000 == 0){
+  if(Game.flags['Print'] != undefined && Game.time % 1000 == 0 || Game.time / 20000 == 0){
     var total = 0;
     var local = Game.flags['Data'].memory.cpuUsage;
     for(var i = 0; i < local.length; i++) total += local[i];
-    console.log('Average CPU usage over ' + local.length + ' ticks: ' + total/local.length)
+    console.log('Average CPU usage over ' + Game.time + ' ticks: ' + total/local.length)
+  }
+  if(Game.time / 20000 == 0) {
+    console.log('Controller lvl and Progress: ' + Game.flags['Data'].room.controller.level + ':' + Game.flags['Data'].room.controller.progress);
   }
 }

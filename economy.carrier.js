@@ -25,14 +25,10 @@ module.exports = {
       else if (building == undefined && creep.carry.energy == creep.carryCapacity) creep.moveTo(25, 25);
     //Gather energy
     } else if (creep.memory.working == false){
-      //Search for dropped energy
-      var droppedEnergy = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (f) => f.resourceType == 'energy'}); //O(e)? negligible
+      //Room will have highest dropped energy saved here
+      var droppedEnergy = creep.room.memory.droppedEnergy;
       //Check if the droppedEnergy is defined, Move to dropppedEnergy if not in range
-      if(droppedEnergy != undefined) {if(creep.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) creep.moveTo(droppedEnergy);}
-      //Withdraw from a container
-      var container = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (i) => i.structureType == STRUCTURE_CONTAINER && i.store[RESOURCE_ENERGY] > 0}); //O(t)
-      //If we're not in range to withdraw from the container, move to it
-      if(creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) creep.moveTo(container);
+      if(droppedEnergy != null) {if(creep.pickup(Game.getObjectById(droppedEnergy.id)) == ERR_NOT_IN_RANGE) creep.moveTo(droppedEnergy.pos.x,droppedEnergy.pos.y);}
     }
   }
 };
