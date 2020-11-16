@@ -35,8 +35,6 @@ function era1(currentRoom){
   if(currentRoom.memory.era != currentRoom.controller.level) {
     //Update the era
     currentRoom.memory.era = currentRoom.controller.level;
-    //Call the citadel construction project!
-    runWithCitadel(currentRoom); //O(s)
   }
   //Count the number of sources so we know the number of miners to make
   if(currentRoom.memory.source == undefined) currentRoom.memory.source = currentRoom.find(FIND_SOURCES); //O(t)
@@ -70,7 +68,7 @@ function era1(currentRoom){
         if(temp[i].structureType == STRUCTURE_TOWER) {asdf = temp[i];break;}
         else if(temp[i].structureType == STRUCTURE_EXTENSION && prio > 1) {asdf = temp[i];prio = 1;}
         else if(temp[i].structureType == STRUCTURE_ROAD && prio > 2) {asdf = temp[i];prio = 2;}
-        else if(temp[i].structureType == STRUCTURE_WALL && prio > 3) {asdf = temp[i];prio = 3;} 
+        else if(temp[i].structureType == STRUCTURE_WALL && prio > 3) {asdf = temp[i];prio = 3;}
       }
     } else asdf = 'null';
     currentRoom.memory.build = asdf;
@@ -162,22 +160,18 @@ function constructCitadel(center){
     8,8,8,8,8,8,8,8,7,6,6,5,4,3,2,1,0,-1,-2,-3,-4,-5,-6,-7,9,9,9,-8,-8,-8,-8,-8,
     -8,-8,-8,-7,-8,-8,-8,-8,-8,-8,-8,-7);
   //x offsets for towers
-  var dxTowers = new Array(0,2);
+  var dxTowers = [2];
   //y offsets for towers
-  var dyTowers = new Array(0,-1);
+  var dyTowers = [-1];
   switch(center.room.memory.era){
     case 4:
     //Era is 3 we can make extensions, walls, tower etc.
-    case 2: var wallsPossible = dxWalls.length;
+    case 3: var wallsPossible = dxWalls.length;
             var roadsPossible = dxRoads.length;
             var extensionsPossible = 10;
-            var towersPossible = 2; break;
-    //Era is 2 we can make extensions and walls
-    case 2: var wallsPossible = dxWalls.length;
-            var roadsPossible = dxRoads.length;
-            var extensionsPossible = 5; break;
-    //Era is 1 we can make the roads
-    case 1: var roadsPossible = dxRoads.length; break;
+            var towersPossible = 1; break;
+    //Era is 2 we can make extensions
+    case 2: var extensionsPossible = 5; break;
   }
   //Make towers while we can
   while(center.room.memory.towersProgress < towersPossible){

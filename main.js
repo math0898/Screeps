@@ -13,6 +13,8 @@ var logicSpawn = require('logic.spawn');
 var logicEra = require('logic.era');
 //A couple booleans to handle certain situations
 var hostiles;
+//'Constants'
+var allies = ["gavinmpaw2000","ser1618"];
 /**
  * Looks at all the visible rooms and adds those of which are considered
  * under our control to the array controlledRooms. It also confirms all rooms
@@ -28,33 +30,31 @@ function initializeControlledRooms(){
   for(let r in visibleRooms) if(Game.rooms[r].find(FIND_MY_SPAWNS).length > 0) controlledRooms.push(r); //O(r * t)
 }
 /**
- * Counts the number of each creep assigned to the room. Note this accesses
- * all creeps in order to find scouts, claimers, and distanceHarvesters. Otherwise
- * it should only scale on the number of creeps in the room. O(9n) --> n is the number of creeps
- * @param currentRoom The room in which creeps are counted and the room in which
- * the counts are saved in memory.
+ * Resets the count of the creeps in the room, also initializes arrays and variables
+ * if necessary.
+ * Runtime: O(c) ---> runs in constant time
+ * @param currentRoom The room which has its counts reset
  */
-function countCreeps(currentRoom){
+function resetCreepCounts(currentRoom){
+  //Check if the count array is defined, if its not, define it.
   if (currentRoom.memory.count == undefined) currentRoom.memory.count = [];
-  //Count era 1 creeps
-  currentRoom.memory.count.harvester = _.sum(currentRoom.find(FIND_MY_CREEPS), (c) => c.memory.role == 'harvester' && c.memory.distance == undefined); //O(n)
-  //Count era 2 creeps
-  currentRoom.memory.count.repairBot = _.sum(currentRoom.find(FIND_MY_CREEPS), (c) => c.memory.role == 'repairBot'); //O(n)
-  currentRoom.memory.count.miner = _.sum(currentRoom.find(FIND_MY_CREEPS), (c) => c.memory.role ==  'miner'); //O(n)
-  currentRoom.memory.count.carrier = _.sum(currentRoom.find(FIND_MY_CREEPS), (c) => c.memory.role == 'carrier'); //O(n)
-  currentRoom.memory.count.distanceHarvester = _.sum(Game.creeps, (c) => c.memory.role == 'distanceHarvester' && c.memory.home == currentRoom.name); //O(n)
-  currentRoom.memory.count.scout = _.sum(Game.creeps, (c) => c.memory.role == 'scout' && c.memory.home == currentRoom.name); //O(n)
-  //Count era 3 creeps
-  currentRoom.memory.count.towerFiller = _.sum(currentRoom.find(FIND_MY_CREEPS), (c) => c.memory.role == 'towerFiller'); //O(n)
-  currentRoom.memory.count.claimer = _.sum(Game.creeps, (c) => c.memory.role == 'claimer'); //O(n)
-  currentRoom.memory.count.worker = _.sum(Game.creeps, (c) => c.memory.role == 'worker'); //O(n)
+  //Reset counts for each creep type.
+  currentRoom.memory.count.harvester = 0;
+  currentRoom.memory.count.repairBot = 0;
+  currentRoom.memory.count.miner = 0;
+  currentRoom.memory.count.carrier = 0;
+  // currentRoom.memory.count.distanceHarvester = 0;
+  currentRoom.memory.count.scout = 0;
+  currentRoom.memory.count.claimer = 0;
+  currentRoom.memory.count.worker = 0;
 }
 /**
- * Runs the AI for the creeps relating to the economy.
- * Worst case: O(9t * n) --> n is the number of creeps, t is the number of buildings
- * Expected case: O(2t * n) --> n is the number of creeps, t is the number of buildings
+ * Runs the AI for the creeps and also counts them to save in their room's memory.
+ * Runtime: O(r + n * t) --> r is the number of rooms, n is the number of creeps, t is the number of buildings
  */
-function economyCreepAI(){
+function creepAI(){
+  //Reset the counts for each room.
+  for(var r in Game.rooms) resetCreepCounts(Game.rooms[r]); //O(r)
   //Loop through all creeps
   for(var name in Game.creeps){
     //Easy refrence and minimize .memory reading
@@ -63,35 +63,21 @@ function economyCreepAI(){
     //Check role agaisnt this list and run approiate function
     switch(creepRole){
       //Harvester AI
-      case 'harvester': roleHarvester.run(creep); break;
+      case 'harvester': creep.room.memory.count.harvester++; roleHarvester.run(creep); break;
       //Miner AI
-      case 'miner': roleMiner.run(creep); break;
+      case 'miner': creep.room.memory.count.miner++;  roleMiner.run(creep); break;
       //Carrier AI
-      case 'carrier': roleCarrier.run(creep); break;
+      case 'carrier': creep.room.memory.count.carrier++;  roleCarrier.run(creep); break;
       //DistanceHarvester AI
-      case 'distanceHarvester': roleDistanceHarvester.run(creep); break;
+      // case 'distanceHarvester': creep.room.memory.count.harvester++;  roleDistanceHarvester.run(creep); break;
       //RepairBot AI
-      case 'repairBot': roleRepairBot.run(creep); break;
+      case 'repairBot': creep.room.memory.count.repairBot++;  roleRepairBot.run(creep); break;
       //Worker AI
-      case 'worker': roleWorker.run(creep); break;
-    }
-  }
-}
-/**
- * Runs the AI for creeps relating to combat and claiming of new rooms. O(n) --> n is the number of creeps
- */
-function combatCreepAI(){
-  //Loop through all creeps
-  for(var name in Game.creeps){
-    //Easy refrence and minimize .memory reading
-    var creep = Game.creeps[name];
-    var creepRole = Game.creeps[name].memory.role;
-    //Check role against this list and run approiate function
-    switch(creepRole){
+      case 'worker': creep.room.memory.count.worker++;  roleWorker.run(creep); break;
       //Scout AI
-      case 'scout': roleScout.run(creep); break;
+      case 'scout': creep.room.memory.count.scout++;  roleScout.run(creep); break;
       //Claimer AI
-      case 'claimer': roleClaimer.run(creep); break;
+      case 'claimer': creep.room.memory.count.claimer++;  roleClaimer.run(creep); break;
     }
   }
 }
@@ -190,27 +176,22 @@ function collectData(){
  */
 module.exports.loop = function(){
   //Check if controlled rooms need to be initialized or refreshed
-  if(controlledRooms == undefined || Game.time % 1 == 0) initializeControlledRooms();
+  if(controlledRooms == undefined || Game.time % 1 == 0) initializeControlledRooms(); //O(r * t)
   //Run creep AI
-  //Ecnomic creeps are more important
-  economyCreepAI(); //O(9t * n) - O(2t * n)
-  //Combat is pretty important but comes second
-  combatCreepAI(); //O(n)
+  creepAI(); //O(r + n * t)
   //We should update our memory sometime, why not now?
   updateCreepMemory(); //O(n)
   //Iterate by controlledRooms, casualy check for undefined rooms and condense currentRoom
   for(var i = 0; i < controlledRooms.length; i++) { if(Game.rooms[controlledRooms[i]] == undefined) continue; else currentRoom = Game.rooms[controlledRooms[i]]; //O(r)
     //Check if era is undefined
     if(currentRoom.memory.era == undefined) currentRoom.memory.era = 1;
-    //Run the room era logic
-    if(currentRoom.memory.newSites) logicEra.runWithCitadel(currentRoom); //O(t + s) - O(c)
+    //Run the room era logic with construction, if we can add new sites
+    if(currentRoom.memory.newSites) logicEra.runWithCitadel(currentRoom); //TODO: O(t + s) - O(c)
+    //Run the room era logic without construction
     else logicEra.run(currentRoom);
-    //Count the creeps
-    countCreeps(currentRoom); //O(9n)
     //Run the spawning logic for the room
     logicSpawn.spawn(currentRoom); //O(s * t * n)/O(s * 2t) - O(s * n)
   }
-
   //Collect data
   if(Game.flags['Data'] != undefined) collectData();
 }
