@@ -1,3 +1,32 @@
+------ Update 1.1.3 ------ Stable Workers ------
+Goal: Make workers stable, and fix CPU spike at Era 2
+
+Completed Tasks:
+---> MAJOR CPU Optimization, citadels are no longer constructed every tick, now just when
+     construction sites are less than 100, and try's just what needs to be added next.
+---> +84 lines... doesn't mean much but hey
+---> Implemented room build target which should prioritize tower > extension > road > wall and then progress.
+---> Worker now takes it's build target from room memory rather than its own search algorithm.
+---> logc.era.js now checks whether to run near future logic with construction or not.
+---> main.js now uses this (^) to run logic, or logic with citadel.
+---> Added some new performance calculations
+---> Changed how citadel construction sites are added.
+
+Additional TODO's:
+---> Add basic scouting Mechanics.
+---> Add automatic additional room taking.
+---> Reimplement distance harvesters.
+---> Check if more workers can be spawned.
+---> Prevent the 1 tick loss when controller upgrades since era isn't updated.
+---> Add a 'constant' in the code containing allies.
+
+Performance Change:
+---> (CPU Usage) (18.815) -> (5.141) avg. over the first 20,000 ticks
+---> (Peak CPU) Previously untested -> (31.240) over the first 20,000 ticks
+---> (Controller lvl) (2:[33,703] - 75%) -> (2:[35,547] - 79%) in 20,000 ticks
+---> (Mined Resources) Previously untested -> (458,432) resources mined
+---> (Wasted Resources) Previously untested -> ([126,964] - 28%) of mined resources unused
+
 ------ Update 1.1.2 ------ Controlled Rooms ------
 Goal: Have an array that better describes the rooms I control.
 
@@ -6,7 +35,7 @@ Completed Tasks:
 ---> Implemented some basic logic to run initializeControlledRooms on occasion and start.
 ---> Removed unnecessary variables.
 ---> Made data collection feel less tagged on... even though it still is.
----> Removed some currently unused code
+---> Removed some currently unused code.
 ---> Created a droppedEnergy in room memory which points to the largest pile.
 ---> Now creeps use the droppedEnergy in room memory and don't do their own search.
      Creeps should be more stable and use less CPU.
@@ -16,11 +45,12 @@ Additional TODO's:
 ---> Add basic scouting Mechanics.
 ---> Add automatic additional room taking.
 ---> Make worker building stable. No more random movements.
+---> Reimplement distance harvesters.
+---> Check if more workers can be spawned.
 
-Performance Change
----> (Cpu Usage) (18.98) -> (18.815) avg. over the first 20,000 ticks
+Performance Change:
+---> (CPU Usage) (18.98) -> (18.815) avg. over the first 20,000 ticks
 ---> (Controller lvl) (2:[25,707] - 57%) -> (2:[33,703] - 75%) in 20,000 ticks
----> (Wasted Resources) Untested
 
 
 ------ Update 1.1.1 ------ Capacity Based Spawning ------
@@ -42,7 +72,6 @@ Additional TODO's:
 ---> Add basic scouting Mechanics.
 ---> Add automatic additional room taking.
 
-Performance Change
----> (Cpu Usage) Previously untested -> (18.98) avg. over the first 20,000 ticks
+Performance Change:
+---> (CPU Usage) Previously untested -> (18.98) avg. over the first 20,000 ticks
 ---> (Controller lvl) Previously untested -> (2:[25,707] - 57%) in 20,000 ticks
----> (Wasted Resources) Untested

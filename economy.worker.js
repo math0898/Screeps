@@ -22,20 +22,8 @@ module.exports = {
      if(creep.memory.upgrade == undefined) creep.memory.upgrade = false;
      //Let's spend some energy!
      if(creep.memory.working){
-       var temp = creep.room.find(FIND_CONSTRUCTION_SITES); //O(t)
-       //Used to determine the priority of the construction site saved
-       var prio = 100;
-       //See if anything needs to be built
-       if(temp.length > 0 && creep.room.controller.ticksToDowngrade > 5000 && !creep.memory.upgrade) {
-         for(var i = 0; i < temp.length; i++) {
-           if(temp[i].structureType == STRUCTURE_TOWER) { asdf = temp[i]; break;}
-           else if(temp[i].structureType == STRUCTURE_EXTENSION && prio > 1) { asdf = temp[i]; prio = 1;}
-           else if(temp[i].structureType == STRUCTURE_ROAD && prio > 2) { asdf = temp[i]; prio = 2;}
-           else if(temp[i].structureType == STRUCTURE_WALL && prio > 3) {asdf = temp[i]; prio = 3;}
-         }
-       } else asdf = 'null';
        //Check if we need to build something
-       if(asdf != 'null') { if(creep.build(asdf) == ERR_NOT_IN_RANGE) creep.moveTo(asdf);}
+       if(creep.room.memory.build != 'null') { if(creep.build(Game.getObjectById(creep.room.memory.build.id)) == ERR_NOT_IN_RANGE) creep.moveTo(creep.room.memory.build.pos.x,creep.room.memory.build.pos.y);}
        //If we don't need to build something, upgrade the controller
        else {
          creep.memory.upgrade = true;

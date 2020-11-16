@@ -16,7 +16,7 @@
  */
 function createConstructionSite(center, dx, dy, structureType){
   //Create the construction site
-  center.room.createConstructionSite(center.pos.x + dx, center.pos.y + dy, structureType);
+  return center.room.createConstructionSite(center.pos.x + dx, center.pos.y + dy, structureType);
 }
 /**
  * The logic for a 1st level controller room. Implements the most basic of all
@@ -55,6 +55,25 @@ function era1(currentRoom){
   }
   //Initialize droppedEnergy if non are found
   else currentRoom.memory.droppedEnergy = null;
+  //Check if we need a new build target
+    //Build target
+    var temp = currentRoom.find(FIND_CONSTRUCTION_SITES); //O(t)
+    //If we have 100 construction sites we don't need more
+    if(temp.length == 100) currentRoom.memory.newSites = false;
+    else currentRoom.memory.newSites = true;
+    //Used to determine the priority of the construction site saved
+    var prio = 100;
+    //See if anything needs to be built
+    if(temp.length > 0) {
+    var asdf = temp[0];
+    for(var i = 1; i < temp.length; i++) {
+        if(temp[i].structureType == STRUCTURE_TOWER) {asdf = temp[i];break;}
+        else if(temp[i].structureType == STRUCTURE_EXTENSION && prio > 1) {asdf = temp[i];prio = 1;}
+        else if(temp[i].structureType == STRUCTURE_ROAD && prio > 2) {asdf = temp[i];prio = 2;}
+        else if(temp[i].structureType == STRUCTURE_WALL && prio > 3) {asdf = temp[i];prio = 3;} 
+      }
+    } else asdf = 'null';
+    currentRoom.memory.build = asdf;
 }
 /**
  * The logic for a 2nd levl controller room. Implements and initializes distance
@@ -105,77 +124,90 @@ function era4(currentRoom){
 
 }
 /**
- * Constructs a basic road network which will then build into a massive citadel.
- * @param center The center of the road network and citadel. O(c) --> runs in constant time
+ * Constructs a citadel.
+ * @param center The center of the citadel
  */
-function constructCitadel1(center){
+function constructCitadel(center){
+  //Progress counter for roads
+  if(center.room.memory.roadProgress == undefined) center.room.memory.roadProgress = 0;
+  //Progress counter for extensions
+  if(center.room.memory.extensionProgress == undefined) center.room.memory.extensionProgress = 0;
+  //Progress counter for walls
+  if(center.room.memory.wallsProgress == undefined) center.room.memory.wallsProgress = 0;
+  //Progress counter for towers
+  if(center.room.memory.towersProgress == undefined) center.room.memory.towersProgress = 1;
+  //Constant arrays holding relative positions of each building type
   //x offsets for roads
-  var dx = new Array(-5,-4,-3,-2,-1,-5,-4,-3,-2,-1,-1,0,0,5,4,3,2,1,5,4,3,2,1,1,
+  var dxRoads = new Array(-5,-4,-3,-2,-1,-5,-4,-3,-2,-1,-1,0,0,5,4,3,2,1,5,4,3,2,1,1,
     -3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3,4,4,4,4,4,4,4,-4,-4,-4,-4,-4,-4,-4,-6,-6,6,
     6,-7,-7,7,7,-8,-8,8,8,-5,-4,-3,-2,-1,0,1,2,3,4,5,7,7,7,7,7,7,7,7,7,7,6,5,4,3,
     2,1,0,-1,-2,-3,-4,-5,-6,-7,-7,-7,-7,-7,-7,-7,-7,-7,-7,-7,-7);
   //y offsets for roads
-  var dy = new Array(5,4,3,2,1,-5,-4,-3,-2,-1,0,1,-1,5,4,3,2,1,-5,-4,-3,-2,-1,0,
+  var dyRoads = new Array(5,4,3,2,1,-5,-4,-3,-2,-1,0,1,-1,5,4,3,2,1,-5,-4,-3,-2,-1,0,
     4,4,4,4,4,4,4,-4,-4,-4,-4,-4,-4,-4,-3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3,-6,6,-6,6,
     -7,7,-7,7,8,-8,8,-8,-7,-7,-7,-7,-7,-7,-7,-7,-7,-7,-7,-5,-4,-3,-2,-1,0,1,2,3,4,
     5,6,7,7,7,7,7,7,7,7,7,6,5,4,3,2,1,0,-1,-2,-3,-4,-5);
-  //Create the road network
-  for(var i = 0; i < dx.length; i++) createConstructionSite(center, dx[i], dy[i], STRUCTURE_ROAD);
-}
-/**
- * Constructs a basic extensions and walls avaiable at controller lvl 2 which will
- * then build into a massive citadel. O(c) --> runs in constant time
- * @param center The center of the extensions and citadel.
- */
-function constructCitadel2(center){
   //x offsets for extensions
-  var dx = new Array(1,-1,0,1,-1);
+  var dxExtensions = new Array(1,-1,0,1,-1,1,-1,0,0,1);
   //y offsets for extensions
-  var dy = new Array(-2,-2,-3,2,2);
-  //Create the extensions
-  for(var i = 0; i <= 5; i++) createConstructionSite(center, dx[i], dy[i], STRUCTURE_EXTENSION);
+  var dyExtensions = new Array(-2,-2,-3,2,2-3,3,-3,2,3);
   //x offsets for walls
-  var dx = new Array(-5,-5,-5,-5,-5,-5,-5,-5,-5,5,5,5,5,5,5,5,5,5,4,3,2,1,0,-1,-2,
+  var dxWalls = new Array(-5,-5,-5,-5,-5,-5,-5,-5,-5,5,5,5,5,5,5,5,5,5,4,3,2,1,0,-1,-2,
     -3,-4,4,3,2,1,0,-1,-2,-3,-4,-8,-8,-8,-8,-8,-8,-8,-8,-8,-8,-8,-8,-8,-8,-7,-6,
     -6,-5,-4,-3,-2,-1,1,2,3,4,5,6,6,7,8,8,8,8,8,8,8,8,8,8,8,8,8,8,-1,0,1,0,1,2,3,
     4,5,6,7,6,-1,-2,-3,-4,-5,-6,-7,-6);
   //y offsets for walls
-  var dy = new Array(4,3,2,1,0,-1,-2,-3,-4,4,3,2,1,0,-1,-2,-3,-4,-5,-5,-5,-5,-5,
+  var dyWalls = new Array(4,3,2,1,0,-1,-2,-3,-4,4,3,2,1,0,-1,-2,-3,-4,-5,-5,-5,-5,-5,
     -5,-5,-5,-5,5,5,5,5,5,5,5,5,5,0,1,2,3,4,5,6,-1,-2,-3,-4,-5,-6,-7,6,7,8,8,8,8,
     8,8,8,8,8,8,8,8,7,6,6,5,4,3,2,1,0,-1,-2,-3,-4,-5,-6,-7,9,9,9,-8,-8,-8,-8,-8,
     -8,-8,-8,-7,-8,-8,-8,-8,-8,-8,-8,-7);
-  //Create the walls
-  for(var i = 0; i < dx.length; i++) createConstructionSite(center, dx[i], dy[i], STRUCTURE_WALL);
+  //x offsets for towers
+  var dxTowers = new Array(0,2);
+  //y offsets for towers
+  var dyTowers = new Array(0,-1);
+  switch(center.room.memory.era){
+    case 4:
+    //Era is 3 we can make extensions, walls, tower etc.
+    case 2: var wallsPossible = dxWalls.length;
+            var roadsPossible = dxRoads.length;
+            var extensionsPossible = 10;
+            var towersPossible = 2; break;
+    //Era is 2 we can make extensions and walls
+    case 2: var wallsPossible = dxWalls.length;
+            var roadsPossible = dxRoads.length;
+            var extensionsPossible = 5; break;
+    //Era is 1 we can make the roads
+    case 1: var roadsPossible = dxRoads.length; break;
+  }
+  //Make towers while we can
+  while(center.room.memory.towersProgress < towersPossible){
+    //Try to create the site
+    if(createConstructionSite(center, dxTowers[center.room.memory.towersProgress], dyTowers[center.room.memory.towersProgress], STRUCTURE_TOWER) == OK) center.room.memory.towersProgress++;
+    //If we fail we have too many construction sites
+    else break;
+  }
+  //Make the extensions while we can
+  while(center.room.memory.extensionProgress < extensionsPossible){
+    //Try to create the site
+    if(createConstructionSite(center, dxExtensions[center.room.memory.extensionProgress], dyExtensions[center.room.memory.extensionProgress], STRUCTURE_EXTENSION) == OK) center.room.memory.extensionProgress++;
+    //If we fail we have too many construction sites
+    else break;
+  }
+  //Make the roads we can
+  while(center.room.memory.roadProgress < roadsPossible){
+    //Try to create the site
+    if(createConstructionSite(center, dxRoads[center.room.memory.roadProgress], dyRoads[center.room.memory.roadProgress], STRUCTURE_ROAD) == OK) center.room.memory.roadProgress++;
+    //If we fail we have too many construction sites
+    else break;
+  }
+  //Make the walls we can
+  while(center.room.memory.wallsProgress < wallsPossible){
+    //Try to create the site
+    if(createConstructionSite(center, dxWalls[center.room.memory.wallsProgress], dyWalls[center.room.memory.wallsProgress], STRUCTURE_WALL) != ERR_FULL) center.room.memory.wallsProgress++;
+    //If we fail we have too many construction sites
+    else break;
+  }
 }
-/**
- * Constructs slightly more advanced extensions avaiable at controller lvl 3 which
- * will then build into a massive citadel. O(c) --> runs in constant time
- * @param center The center of the extensions, tower, and citadel.
- */
-function constructCitadel3(center){
-  //Note: 0 maps the tower 1->6 maps extensions
-  //x offsets for extensions and tower
-  var dx = new Array(2,1,-1,0,0,1);
-  //y offsets for extensions and tower
-  var dy = new Array(-1,-3,3,-3,2,3);
-  //Create the tower
-  createConstructionSite(center, dx[0], dy[0], STRUCTURE_TOWER);
-  //Create the extensions
-  for(var i = 1; i <= 6; i++) createConstructionSite(center, dx[i], dy[i], STRUCTURE_EXTENSION);
-}
-/**
- * Constructs intermediate exensions avaiable at controller lvl 4 which will then
- * build into a massive citadel. O(c) --> runs in constant time
- * @param center The center of the extensions and citadel.
- */
- function constructCitadel4(center){
-   //x offsets for extensions
-   var dx = new Array(1,-1,2,-2,-2,2);
-   //y offsets for extensions
-   var dy = new Array(3,3,3,-3,3,-3);
-   //Create the extensions
-   for(var i = 0; i <= 5; i++) createConstructionSite(center, dx[i], dy[i], STRUCTURE_EXTENSION);
- }
 /**
  * Runs the logic required for turrets.
  * O(2n + 4t) --> n is the number of creeps
@@ -244,13 +276,13 @@ module.exports = {
     //Call the corosponding logic and previous logic based on the era level
     switch(currentRoom.memory.era){
       //Era 4 citadel and logic
-      case 4: constructCitadel4(center); era4(currentRoom);
+      case 4: era4(currentRoom);
       //Era 3 citadel and logic
-      case 3: constructCitadel3(center); era3(currentRoom);
+      case 3: era3(currentRoom);
       //Era 2 citadel and logic
-      case 2: constructCitadel2(center); era2(currentRoom);
+      case 2: era2(currentRoom);
       //Era 1 citadel and logic
-      case 1: constructCitadel1(center); era1(currentRoom);
+      case 1: constructCitadel(center); era1(currentRoom);
     }
     //Note: when placed as such without break; constructCitadelN is called when era >= N
   }

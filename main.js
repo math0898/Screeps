@@ -103,6 +103,81 @@ function updateCreepMemory(){
   for(let name in Memory.creeps) if(Game.creeps[name] == undefined) delete Memory.creeps[name];
 }
 /**
+ * Collects data on a number of things including but not limited to cpu usage per tick,
+ * mined resources, and wasted resources.
+ * Runtime calculation not needed as this is only run when data flag is down.
+ */
+function collectData(){
+  //Grab the cpu usage this tick before we do anything to mess it up
+  thisTickUsage = Game.cpu.getUsed();
+  //Check if our cpuUsage array is setup, if it isn't, set it up
+  if(Game.flags['Data'].memory.cpuUsage == undefined) Game.flags['Data'].memory.cpuUsage = [];
+  //Check if our start tick is setup, if it isn't, set it
+  if(Game.flags['Data'].memory.startTick == undefined) Game.flags['Data'].memory.startTick = Game.time;
+  //Check if our peak tick is setup, if it isn't, set it up
+  if(Game.flags['Data'].memory.peakUsage == undefined) Game.flags['Data'].memory.peakUsage = thisTickUsage;
+  //Check if our total mined is seutp, if it isn't, set it
+  if(Game.flags['Data'].memory.totalMined == undefined) Game.flags['Data'].memory.totalMined = 0;
+  //Check if our decaying resources is setup, if it isn't, set it up
+  if(Game.flags['Data'].memory.lostedResources == undefined) Game.flags['Data'].memory.lostedResources = 0;
+  //Collect source information but not proccess yet
+  var thisTickSources = Game.flags['Data'].room.find(FIND_SOURCES);
+  //Collect dropped resources information but not proccess yet
+  var droppedResources = Game.flags['Data'].room.find(FIND_DROPPED_RESOURCES);
+  //Push the new tick data to the usage array
+  Game.flags['Data'].memory.cpuUsage.push(thisTickUsage);
+  //Check if this tick was a new peak usage
+  if(thisTickUsage > Game.flags['Data'].memory.peakUsage) Game.flags['Data'].memory.peakUsage = thisTickUsage;
+  //Add mined resources information
+  for(var i = 0; i < thisTickSources.length; i++){
+    //If there are no past sources, make them and we should be good here
+    if(Game.flags['Data'].memory.pastSources == undefined) { Game.flags['Data'].memory.pastSources = thisTickSources; break; }
+    //The difference between the two is how much we mined, check if the source refilled itself though
+    if(Game.flags['Data'].memory.pastSources[i].energy >= thisTickSources[i].energy){
+      //Add the difference to memory
+      Game.flags['Data'].memory.totalMined += (Game.flags['Data'].memory.pastSources[i].energy - thisTickSources[i].energy);
+    } else {
+      //You had to make things complicated didn't you? Oh well, we should just need this
+      Game.flags['Data'].memory.totalMined += thisTickSources[i].energyCapacity - thisTickSources[i].energy;
+    }
+    //Set our past sources to the current ones
+    Game.flags['Data'].memory.pastSources = thisTickSources;
+  }
+  //Proccess dropped resources information
+  for(var i = 0; i < droppedResources.length; i++){
+    //This amount of resources will decay
+    Game.flags['Data'].memory.lostedResources += Math.ceil(droppedResources[i].amount/1000);
+  }
+  //Check if 20,000 ticks have passed and we can print final stats
+  if(Game.time - Game.flags['Data'].memory.startTick == 20000  || Game.time % 100 == 0){
+    //Print start and header information
+    var p = 'Preformence Report\nTick Started On: ' + Game.flags['Data'].memory.startTick + '\nTick Ended On: ' + Game.time + '\n';
+    //Data capture stats
+    p += 'Data Captured on: ' + Game.flags['Data'].memory.cpuUsage.length + ' / ' + (Game.time - Game.flags['Data'].memory.startTick) + ' for a rate of ' + (Game.flags['Data'].memory.cpuUsage.length/(Game.time - Game.flags['Data'].memory.startTick)) + '\n';
+    //Calculate average usage
+    //Running total
+    var total = 0;
+    //Localized data array so we don't have to access it a ton
+    var local = Game.flags['Data'].memory.cpuUsage;
+    //Sum the array
+    for(var i = 0; i < local.length; i++) total += local[i];
+    //Average CPU usage
+    p += 'Average CPU Usage: ' + total/local.length + '\n';
+    //Peak CPU usage
+    p += 'Peak CPU Usage: ' + Game.flags['Data'].memory.peakUsage + '\n';
+    //Controller Level and progress
+    p += 'Controller lvl and Progress: ' + Game.flags['Data'].room.controller.level + ':' + Game.flags['Data'].room.controller.progress + '\n';
+    //Total resources mined
+    p += 'Total Mined Resources: ' + Game.flags['Data'].memory.totalMined + '\n';
+    //Total lost resources
+    p += 'Lost Resources: ' + Game.flags['Data'].memory.lostedResources + '\n';
+    //Resource usage rate
+    p += 'Resource Usage Rate: ' + ((Game.flags['Data'].memory.totalMined - Game.flags['Data'].memory.lostedResources)/Game.flags['Data'].memory.totalMined) + '\n';
+    //Print p
+    console.log(p);
+  }
+}
+/**
  * This is the int main of this project. It runs through a lot of things each tick
  * including but not limited to creep AI and era AI of rooms.
  * Worst case:    O(n * 9t + 2n + 9n * r + n * s * t * r + r * s + r * t)
@@ -128,7 +203,8 @@ module.exports.loop = function(){
     //Check if era is undefined
     if(currentRoom.memory.era == undefined) currentRoom.memory.era = 1;
     //Run the room era logic
-    logicEra.runWithCitadel(currentRoom); //O(t + s) - O(c)
+    if(currentRoom.memory.newSites) logicEra.runWithCitadel(currentRoom); //O(t + s) - O(c)
+    else logicEra.run(currentRoom);
     //Count the creeps
     countCreeps(currentRoom); //O(9n)
     //Run the spawning logic for the room
@@ -136,17 +212,5 @@ module.exports.loop = function(){
   }
 
   //Collect data
-  if(Game.flags['Data'] != undefined) {
-    if(Game.flags['Data'].memory.cpuUsage == undefined) Game.flags['Data'].memory.cpuUsage = [];
-    Game.flags['Data'].memory.cpuUsage.push(Game.cpu.getUsed());
-  }
-  if(Game.flags['Print'] != undefined && Game.time % 1000 == 0 || Game.time / 20000 == 0){
-    var total = 0;
-    var local = Game.flags['Data'].memory.cpuUsage;
-    for(var i = 0; i < local.length; i++) total += local[i];
-    console.log('Average CPU usage over ' + Game.time + ' ticks: ' + total/local.length)
-  }
-  if(Game.time / 20000 == 0) {
-    console.log('Controller lvl and Progress: ' + Game.flags['Data'].room.controller.level + ':' + Game.flags['Data'].room.controller.progress);
-  }
+  if(Game.flags['Data'] != undefined) collectData();
 }
