@@ -21,7 +21,8 @@ Completed Tasks:
 ---> MAJOR CPU Optimization, citadels are no longer constructed every tick,
      now just when construction sites are less than 100, and try's just what needs to be added next.
 ---> +84 lines... doesn't mean much but hey
----> Implemented room build target which should prioritize tower > extension > road > wall and then progress.
+---> Implemented room build target which should prioritize tower > extension > road > wall and then
+     progress.
 ---> Worker now takes it's build target from room memory rather than its own search algorithm.
 ---> logc.era.js now checks whether to run near future logic with construction or not.
 ---> main.js now uses this (^) to run logic, or logic with citadel.
