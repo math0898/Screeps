@@ -1,9 +1,41 @@
+------ Update 1.2.1 ------ Scouting ------
+Goals: 1) Implement a scouting method to search for potentially hostile rooms,
+       expansion locations and distance mines.
+       2) Clean and update existing code so big O runtimes are consistent.
+       3) Hard code the entirety of the citadel base core, and implement a method
+       for choosing it when possible.
+
+Completed Tasks:
+--->
+
+Additional TODO's
+---> Add basic scouting Mechanics.
+---> Add automatic additional room taking.
+---> Reimplement distance harvesters.
+---> Check if more workers can be spawned.
+---> Check if a helper carrier can move resources to a nearby ally.
+---> Give carriers more idle options.
+---> Implement a method to build road network outside of the "core".
+---> Add spawn "core" is centered on to memory so it doesn't need to be searched
+     for every tick. This can also be checked as a shortcut when searching for
+     controlled rooms.
+---> Check citadel building priorities, tower > extensions > roads > walls
+---> Finish hardcoding the citadel structures
+---> Implement a strategy to choose "core" structure in a room.
+
+Performance Change:
+---> (CPU Usage) (4.200) -> () avg. over the first 20,000 ticks
+---> (Peak CPU) (30.522) -> () over the first 20,000 ticks
+---> (Controller lvl) (3:[1,689] - 1%) -> () in 20,000 ticks
+---> (Mined Resources) (441,098) -> () resources mined
+---> (Wasted Resources) ([158,993] - 36%) -> () of mined resources unused
+
 ------ Update 1.1.4 ------ Optimization 1 ------
 Goal: Reduce accesses to the entire creeps list
 
 Completed Tasks:
 ---> Optimizations:
-     Removed O(9n) to be replaced with O(n * t) -> O(r * n * t).
+     Removed O(r * 9n) to be replaced with O(n * t) -> O(r + n * t).
 ---> -25 Lines... doesn't mean much but hey
 ---> Running Creep AI now also counts them.
 ---> New function resetCreepCounts(room) resets creep counts in the room.
