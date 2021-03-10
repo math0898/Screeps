@@ -11,9 +11,12 @@ module.exports = {
   * @param creep the creep on which the AI is being run.
   */
   run: function(creep){
-    //If the flag is not defined, our mission is done, suicide
-    if(Game.flags[creep.memory.scoutTarget] == undefined) creep.suicide();
-    //If the flag isn't defined... move to it... this ain't rocket science
-    creep.moveTo(Game.flags[creep.memory.scoutTarget]);
+    //Check if we have a path, if not find one
+    if(creep.memory.path == undefined) creep.memory.path = creep.room.findPathTo(creep.pos.x,
+      creep.pos.y, creep.memory.scoutTarget);
+    //If the location is defined, move to it.
+    creep.moveByPath(creep.memory.path);
+    //check if we should suicide
+    if(creep.memory.finished != undefined) creep.suicide();
   }
 };

@@ -1,5 +1,5 @@
 console.log('Code updated-----');
-var controlledRooms = []; //Array containing controlled rooms, updated on code refresh
+var controlledRooms = []; //Array containing controlled rooms
 //This is all the logic for importing AI for the creeps, spawns, rooms, etc.
 var roleDistanceHarvester = require('economy.distanceHarvester');
 var roleRepairBot = require('economy.repairBot');

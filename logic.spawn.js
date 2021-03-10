@@ -115,7 +115,7 @@ function spawnScout(capacity, spawn){
   var body = [MOVE]; //Cost - 50
   //Temp name storing
   var name = '[' + spawn.room.name + '] Scout ' + Game.time;
-  //Spawn the creep, Increment the scout count in the room if successful
+  //Spawn the creep
   if(spawn.spawnCreep(body, name, {memory: {role: 'scout', scoutTarget: spawn.room.memory.scoutTarget}}) == OK) spawn.room.memory.count.scout++;
 }
 /**
@@ -174,6 +174,7 @@ module.exports = {
         //Check if a claimer should be spawned
         else if(currentRoom.memory.countClaimer < 1 && Game.flags['Claim'] != undefined) spawnClaimer(capacity, spawn);
         // TODO: reimplement distance harvesters
+        else if(spawn.store.getCapacity([RESOURCE_ENERGY]) == 300 && currentRoom.memory.count.worker < 8) spawnWorker(capacity,spawn);
      }
    }
   }

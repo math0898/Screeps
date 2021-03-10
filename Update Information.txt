@@ -1,34 +1,39 @@
 ------ Update 1.2.1 ------ Scouting ------
 Goals: 1) Implement a scouting method to search for potentially hostile rooms,
-       expansion locations and distance mines.
+       expansion locations, and distance mines.
        2) Clean and update existing code so big O runtimes are consistent.
-       3) Hard code the entirety of the citadel base core, and implement a method
-       for choosing it when possible.
 
 Completed Tasks:
---->
+---> Extensions for the citadel are now explicitly set.
+---> +5 Lines... doesn't mean much but hey
+---> New workers now spawn when the spawn hits capacity and no other creeps need
+     to be spawned. Hard capped at 8 workers.
+---> Citadel construction now prioritizes tower > extensions > roads > walls.
+-> Added tracking the percentage of resources spent on creeps. I will aim to
+     reduce this in the future.
+---> There are likely more changes that were lost in transfer.
 
 Additional TODO's
 ---> Add basic scouting Mechanics.
 ---> Add automatic additional room taking.
 ---> Reimplement distance harvesters.
----> Check if more workers can be spawned.
 ---> Check if a helper carrier can move resources to a nearby ally.
 ---> Give carriers more idle options.
 ---> Implement a method to build road network outside of the "core".
 ---> Add spawn "core" is centered on to memory so it doesn't need to be searched
      for every tick. This can also be checked as a shortcut when searching for
      controlled rooms.
----> Check citadel building priorities, tower > extensions > roads > walls
----> Finish hardcoding the citadel structures
+---> Finish hardcoding the citadel structures (Roads,Walls,Extensions are done)
 ---> Implement a strategy to choose "core" structure in a room.
+---> Add tracking the percentage of resources spent on creeps. I will aim to
+     reduce this in the future.
 
 Performance Change:
----> (CPU Usage) (4.200) -> () avg. over the first 20,000 ticks
----> (Peak CPU) (30.522) -> () over the first 20,000 ticks
----> (Controller lvl) (3:[1,689] - 1%) -> () in 20,000 ticks
----> (Mined Resources) (441,098) -> () resources mined
----> (Wasted Resources) ([158,993] - 36%) -> () of mined resources unused
+---> (CPU Usage) (4.200) -> (4.941) avg. over the first 20,000 ticks
+---> (Peak CPU) (30.522) -> (32.082) over the first 20,000 ticks
+---> (Controller lvl) (3:[1,689] - 1%) -> (3:[21,302] - 16%) in 20,000 ticks
+---> (Mined Resources) (441,098) -> (862,986) resources mined
+---> (Wasted Resources) ([158,993] - 36%) -> ([86,622] - 10%) of mined resources unused
 
 ------ Update 1.1.4 ------ Optimization 1 ------
 Goal: Reduce accesses to the entire creeps list
